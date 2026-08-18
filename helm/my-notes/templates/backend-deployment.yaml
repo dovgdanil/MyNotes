@@ -28,8 +28,6 @@ spec:
             - name: {{ $key }}
               value: {{ $val | quote }}
             {{- end }}
-            - name: REACT_APP_API_URL
-              value: {{ .Values.frontend.env.REACT_APP_API_URL | quote }}
 #          livenessProbe:
 #            httpGet:
 #              path: /api/v1/health

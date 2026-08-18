@@ -18,8 +18,8 @@ backend:
 frontend:
   image:
     repository: ghcr.io/dovgdanil/mynotes/mynotes-frontend
-    tag: dev-b461d46
-    pullPolicy: IfNotPresent
+    tag: dev-bc04fec
+    pullPolicy: Always #IfNotPresent
   replicas: 1
   env:
     REACT_APP_API_URL: "http://my-notes-my-notes-backend:8000/api/v1"
