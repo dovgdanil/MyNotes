@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "my-notes.fullname" . }}-frontend
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "my-notes.labels" . | nindent 4 }}
+    app: frontend
+spec:
+  replicas: {{ .Values.replicas.frontend }}
+  selector:
+    matchLabels:
+      {{- include "my-notes.selectorLabels" . | nindent 6 }}
+      app: frontend
+  template:
+    metadata:
+      labels:
+        {{- include "my-notes.selectorLabels" . | nindent 8 }}
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: "{{ .Values.images.frontend.repository }}:{{ .Values.images.frontend.tag }}"
+          imagePullPolicy: {{ .Values.images.frontend.pullPolicy }}
+          ports:
+            - containerPort: 3000
+          {{- with .Values.resources.frontend }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}

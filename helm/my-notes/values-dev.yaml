@@ -1,0 +1,23 @@
+# Переопределяем только то, что отличается от values.yaml
+namespace: my-notes-dev
+environment: dev
+
+images:
+  backend:
+    tag: dev-latest
+  frontend:
+    tag: dev-latest
+
+replicas:
+  backend: 1
+  frontend: 1
+
+config:
+  logLevel: DEBUG
+
+service:
+  frontend:
+    type: ClusterIP # для dev не нужен внешний доступ
+
+ingress:
+  enabled: false

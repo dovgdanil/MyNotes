@@ -1,0 +1,84 @@
+name: Build and Push Images
+
+on:
+  push:
+    branches: [main]
+  release:
+    types: [published]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_BACKEND: ${{ github.repository }}/mynotes-backend
+  IMAGE_FRONTEND: ${{ github.repository }}/mynotes-frontend
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Determine image tag
+        id: tag
+        run: |
+          if [[ ${{ github.event_name }} == 'release' ]]; then
+            echo "tag=${{ github.event.release.tag_name }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=dev-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build and push backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_BACKEND }}:${{ steps.tag.outputs.tag }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_BACKEND }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_FRONTEND }}:${{ steps.tag.outputs.tag }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_FRONTEND }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Update Helm values with new tag
+        if: github.event_name == 'push' || github.event_name == 'release'
+        run: |
+          if [[ ${{ github.event_name }} == 'push' ]]; then
+            sed -i "s/tag: .*/tag: ${{ steps.tag.outputs.tag }}/" helm/my-notes/values.yaml
+          fi
+          if [[ ${{ github.event_name }} == 'release' ]]; then
+            sed -i "s/tag: .*/tag: ${{ steps.tag.outputs.tag }}/" helm/my-notes/values-prod.yaml
+          fi
+
+      - name: Commit and push changes
+        if: github.event_name == 'push' || github.event_name == 'release'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add helm/my-notes/values.yaml helm/my-notes/values-prod.yaml
+          git commit -m "Update image tag to ${{ steps.tag.outputs.tag }} [skip ci]" || echo "No changes to commit"
+          git push

@@ -1,0 +1,52 @@
+# Глобальные настройки
+namespace: my-notes-dev
+
+# Настройки для каждого компонента
+backend:
+  image:
+    repository: ghcr.io/dovgdanil/mynotes-backend
+    tag: latest
+    pullPolicy: Always
+  replicas: 1
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "100m"
+    limits:
+      memory: "256Mi"
+      cpu: "200m"
+  env:
+    DATABASE_URL: postgresql://user:pass@postgres:5432/notes
+    ALGORITHM: HS256
+    ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+    ENVIRONMENT: dev
+    LOG_LEVEL: DEBUG
+
+frontend:
+  image:
+    repository: your-registry/notes-frontend
+    tag: latest
+    pullPolicy: Always
+  replicas: 1
+  resources:
+    requests:
+      memory: "64Mi"
+      cpu: "50m"
+    limits:
+      memory: "128Mi"
+      cpu: "100m"
+  service:
+    type: ClusterIP
+    port: 80
+
+postgres:
+  image: postgres:15
+  replicas: 1
+  storage: 1Gi
+  env:
+    POSTGRES_USER: user
+    POSTGRES_PASSWORD: pass
+    POSTGRES_DB: notes
+
+secrets:
+  SECRET_KEY: "your-dev-secret-key" # в реальности используйте sealed-secrets
