@@ -1,41 +1,42 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: postgres
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: {{ .Values.postgres.port }}
+---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ include "my-notes.fullname" . }}-postgres
+  name: postgres
   namespace: {{ .Values.namespace }}
-  labels:
-    {{- include "my-notes.labels" . | nindent 4 }}
-    app: postgres
 spec:
-  serviceName: {{ include "my-notes.fullname" . }}-postgres
-  replicas: {{ .Values.replicas.postgres }}
+  serviceName: postgres
+  replicas: {{ .Values.postgres.replicas }}
   selector:
     matchLabels:
-      {{- include "my-notes.selectorLabels" . | nindent 6 }}
       app: postgres
   template:
     metadata:
       labels:
-        {{- include "my-notes.selectorLabels" . | nindent 8 }}
         app: postgres
     spec:
       containers:
         - name: postgres
-          image: "{{ .Values.images.postgres.repository }}:{{ .Values.images.postgres.tag }}"
-          imagePullPolicy: {{ .Values.images.postgres.pullPolicy }}
+          image: {{ .Values.postgres.image }}
           ports:
-            - containerPort: 5432
+            - containerPort: {{ .Values.postgres.port }}
           env:
-            - name: POSTGRES_USER
-              value: {{ .Values.config.database.user }}
-            - name: POSTGRES_PASSWORD
-              value: {{ .Values.config.database.password }}
-            - name: POSTGRES_DB
-              value: {{ .Values.config.database.name }}
-          {{- with .Values.resources.postgres }}
-          resources:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
+            {{- range $key, $val := .Values.postgres.env }}
+            - name: {{ $key }}
+              value: {{ $val | quote }}
+            {{- end }}
           volumeMounts:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data
@@ -44,9 +45,7 @@ spec:
         name: postgres-data
       spec:
         accessModes: ["ReadWriteOnce"]
-        {{- if .Values.storage.postgres.storageClass }}
-        storageClassName: {{ .Values.storage.postgres.storageClass }}
-        {{- end }}
+        storageClassName: {{ .Values.postgres.storageClass }}
         resources:
           requests:
-            storage: {{ .Values.storage.postgres.size }}
+            storage: {{ .Values.postgres.storage }}
