@@ -21,6 +21,8 @@ frontend:
     tag: dev-bc04fec
     pullPolicy: IfNotPresent
   replicas: 1
+  env:
+    REACT_APP_API_URL: "http://my-notes-my-notes-backend:8000/api/v1"
   port: 3000
   service:
     type: ClusterIP
