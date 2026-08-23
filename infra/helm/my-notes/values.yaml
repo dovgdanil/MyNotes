@@ -23,7 +23,7 @@ frontend:
   replicas: 1
   env:
     REACT_APP_API_URL: "http://my-notes-my-notes-backend:8000/api/v1"
-  port: 3000
+  port: 80
   service:
     type: ClusterIP
     port: 80
@@ -41,3 +41,13 @@ postgres:
 
 imagePullSecrets:
   - name: ghcr-auth
+
+ingress:
+  enabled: true
+  className: traefik
+  host: dev.my-notes.lan
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+  tls:
+    enabled: false
+    secretName: my-notes-tls

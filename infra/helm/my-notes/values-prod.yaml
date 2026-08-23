@@ -18,3 +18,13 @@ postgres:
 
 imagePullSecrets:
   - name: ghcr-auth
+
+ingress:
+  enabled: true
+  className: traefik
+  host: prod.my-notes.lan
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure # для HTTPS
+  # tls:
+  #   enabled: true
+  #   secretName: my-notes-tls-prod
