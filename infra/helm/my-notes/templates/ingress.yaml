@@ -30,6 +30,8 @@ spec:
                   number: {{ .Values.frontend.service.port }}
  {{- if .Values.ingress.tls.enabled }}
   tls:
-    {{- toYaml .Values.ingress.tls | nindent 4 }}
+    - hosts:
+      - {{ .Values.ingress.host }} 
+      secretName: {{ .Values.ingress.tls.secretName }}
   {{- end }}
 {{- end }}
