@@ -22,9 +22,10 @@ imagePullSecrets:
 ingress:
   enabled: true
   className: traefik
-  host: prod.my-notes.lan
+  host: prod.my-notes.lan # замени на свой реальный домен
   annotations:
-    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure # для HTTPS
-  # tls:
-  #   enabled: true
-  #   secretName: my-notes-tls-prod
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure # используем порт 443
+    cert-manager.io/cluster-issuer: "selfsigned" # или "letsencrypt-prod"
+  tls:
+    enabled: true
+    secretName: prod-tls

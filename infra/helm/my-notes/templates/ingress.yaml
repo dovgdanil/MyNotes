@@ -1,4 +1,4 @@
-{{ - if .Values.ingress.enabled -}}
+{{- if .Values.ingress.enabled -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -25,13 +25,11 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: {{include "my-notes.fullname" .}}-backend 
+                name: {{include "my-notes.fullname" .}}-frontend
                 port:
                   number: {{ .Values.frontend.service.port }}
  {{- if .Values.ingress.tls.enabled }}
   tls:
-    - hosts:
-        - {{ .Values.ingress.host }}
-      secretName: {{ .Values.ingress.tls.secretName }}
+    {{- toYaml .Values.ingress.tls | nindent 4 }}
   {{- end }}
 {{- end }}

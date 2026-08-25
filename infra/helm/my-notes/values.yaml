@@ -48,6 +48,3 @@ ingress:
   host: dev.my-notes.lan
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: web
-  tls:
-    enabled: false
-    secretName: my-notes-tls
