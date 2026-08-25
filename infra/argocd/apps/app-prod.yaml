@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: https://github.com/dovgdanil/MyNotes.git
     targetRevision: main
-    path: ./helm/my-notes
+    path: ./infra/helm/my-notes
     helm:
       valueFiles:
         - values-prod.yaml
