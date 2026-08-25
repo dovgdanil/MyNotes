@@ -1,5 +1,8 @@
 namespace: my-notes-prod
 
+imagePullSecrets:
+  - name: ghcr-auth
+
 backend:
   replicas: 3
   env:
@@ -11,18 +14,15 @@ backend:
 frontend:
   replicas: 2
   service:
-    type: LoadBalancer
+    type: ClusterIP
 
 postgres:
   storage: 10Gi
 
-imagePullSecrets:
-  - name: ghcr-auth
-
 ingress:
   enabled: true
   className: traefik
-  host: prod.my-notes.lan # замени на свой реальный домен
+  host: prod.my-notes.lan
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure # используем порт 443
     cert-manager.io/cluster-issuer: "selfsigned" # или "letsencrypt-prod"
