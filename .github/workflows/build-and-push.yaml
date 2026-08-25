@@ -3,6 +3,8 @@ name: Build and Push Images
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   release:
     types: [published]
 
@@ -15,15 +17,33 @@ jobs:
     permissions:
       contents: write
       packages: write
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: true
+
+      - name: Detect changed paths
+        id: changes
+        uses: dorny/paths-filter@v2
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+            frontend:
+              - 'frontend/**'
+            infra:
+              - 'infra/**'
+              - 'helm/**'
 
       - name: Set lowercase repository name
         id: repo
         run: echo "repo=${GITHUB_REPOSITORY,,}" >> $GITHUB_OUTPUT
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -45,10 +65,13 @@ jobs:
           fi
 
       - name: Build and push backend
+        if: ${{ steps.changes.outputs.backend == 'true' || github.event_name == 'release' }}
         uses: docker/build-push-action@v5
         with:
           context: ./backend
+          file: ./backend/Dockerfile
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: |
             ${{ env.REGISTRY }}/${{ steps.repo.outputs.repo }}/mynotes-backend:${{ steps.tag.outputs.tag }}
             ${{ env.REGISTRY }}/${{ steps.repo.outputs.repo }}/mynotes-backend:latest
@@ -56,31 +79,44 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Build and push frontend
+        if: ${{ steps.changes.outputs.frontend == 'true' || github.event_name == 'release' }}
         uses: docker/build-push-action@v5
         with:
           context: ./frontend
+          file: ./frontend/Dockerfile
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: |
             ${{ env.REGISTRY }}/${{ steps.repo.outputs.repo }}/mynotes-frontend:${{ steps.tag.outputs.tag }}
             ${{ env.REGISTRY }}/${{ steps.repo.outputs.repo }}/mynotes-frontend:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Update Helm values with new tag
-        if: github.event_name == 'push' || github.event_name == 'release'
+      - name: Update Helm values (backend)
+        if: ${{ steps.changes.outputs.backend == 'true' || github.event_name == 'release' }}
         run: |
           if [[ ${{ github.event_name }} == 'push' ]]; then
-            sed -i "s/tag: .*/tag: ${{ steps.tag.outputs.tag }}/" infra/helm/my-notes/values.yaml
+            sed -i "s/tag: .*/tag: ${{ steps.tag.outputs.tag }}/" infra/helm/my-notes/values.yaml || true
           fi
           if [[ ${{ github.event_name }} == 'release' ]]; then
-            sed -i "s/tag: .*/tag: ${{ steps.tag.outputs.tag }}/" infra/helm/my-notes/values-prod.yaml
+            sed -i "s/tag: .*/tag: ${{ steps.tag.outputs.tag }}/" infra/helm/my-notes/values-prod.yaml || true
+          fi
+
+      - name: Update Helm values (frontend)
+        if: ${{ steps.changes.outputs.frontend == 'true' || github.event_name == 'release' }}
+        run: |
+          if [[ ${{ github.event_name }} == 'push' ]]; then
+            sed -i "s/tag: .*/tag: ${{ steps.tag.outputs.tag }}/" infra/helm/my-notes/values.yaml || true
+          fi
+          if [[ ${{ github.event_name }} == 'release' ]]; then
+            sed -i "s/tag: .*/tag: ${{ steps.tag.outputs.tag }}/" infra/helm/my-notes/values-prod.yaml || true
           fi
 
       - name: Commit and push changes
-        if: github.event_name == 'push' || github.event_name == 'release'
+        if: ${{ steps.changes.outputs.backend == 'true' || steps.changes.outputs.frontend == 'true' || github.event_name == 'release' }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add infra/helm/my-notes/values.yaml infra/helm/my-notes/values-prod.yaml
+          git add infra/helm/my-notes/values.yaml infra/helm/my-notes/values-prod.yaml || true
           git commit -m "Update image tag to ${{ steps.tag.outputs.tag }} [skip ci]" || echo "No changes to commit"
-          git push
+          git push || echo "Push failed"
