@@ -62,7 +62,7 @@
 
 ## Полезные команды
 - Проверить ветки удалённого репо:
-  git ls-remote --heads https://github.com/<user>/MyNotes.git
+  git ls-remote --heads https://github.com/dovgdanil/MyNotes.git
 - Сменить targetRevision в манифесте:
   sed -i 's/targetRevision: main/targetRevision: HEAD/' infra/argocd/app-prod.yaml
 - Посмотреть статус Argo App:
