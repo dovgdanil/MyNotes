@@ -1,6 +1,6 @@
 # MyNotes
 
-Кратко: приложение заметок (backend на Python/FastAPI, frontend на React), контейнеры в GHCR, деплой через Helm + Argo CD. Репозиторий приватный.
+Кратко: приложение заметок (backend на Python/FastAPI, frontend на React), контейнеры в GHCR, деплой через Helm + Argo CD.
 
 ## Структура
 - backend/ — FastAPI приложение, Dockerfile, migrations
