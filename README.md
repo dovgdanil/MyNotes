@@ -47,9 +47,9 @@
 
 3. Добавить приватный репозиторий:
    # HTTPS + PAT
-   argocd repo add https://github.com/<user>/MyNotes.git --username <github-user> --password <PAT> --name mynotes-repo
+   argocd repo add https://github.com/dovgdanil/MyNotes.git --username <github-user> --password <PAT> --name mynotes-repo
    # или SSH
-   argocd repo add git@github.com:<user>/MyNotes.git --ssh-private-key-path ~/.ssh/id_rsa --name mynotes-ssh
+   argocd repo add git@github.com:dovgdanil/MyNotes.git --ssh-private-key-path ~/.ssh/id_rsa --name mynotes-ssh
 
 4. Применить Application-манифест:
    kubectl apply -f infra/argocd/app-prod.yaml
